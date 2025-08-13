@@ -1,14 +1,162 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Menu, Settings, Info, PieChart as PieIcon, BarChart3, Plus } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+// Basic UI components implemented locally to avoid depending on @/components/ui/*
+const cn = (...classes) => classes.filter(Boolean).join(" ");
+
+function Card({ className = "", children }) {
+  return <div className={cn("rounded-lg border", className)}>{children}</div>;
+}
+
+function CardHeader({ className = "", children }) {
+  return <div className={cn("p-4 pb-2", className)}>{children}</div>;
+}
+
+function CardTitle({ className = "", children }) {
+  return <h3 className={cn("font-semibold tracking-tight", className)}>{children}</h3>;
+}
+
+function CardContent({ className = "", children }) {
+  return <div className={cn("p-4 pt-0", className)}>{children}</div>;
+}
+
+function Button({ className = "", variant = "default", size = "default", ...props }) {
+  const base = "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
+  const variants = {
+    default: "bg-primary text-primary-foreground hover:bg-primary/90",
+    secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+    ghost: "hover:bg-accent hover:text-accent-foreground",
+    outline: "border hover:bg-accent hover:text-accent-foreground",
+  };
+  const sizes = {
+    default: "h-10 px-4 py-2",
+    icon: "h-10 w-10",
+    sm: "h-9 px-3",
+    lg: "h-11 px-8",
+  };
+  return <button className={cn(base, variants[variant], sizes[size], className)} {...props} />;
+}
+
+function Input({ className = "", ...props }) {
+  return <input className={cn("flex h-10 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1", className)} {...props} />;
+}
+
+function Label({ className = "", ...props }) {
+  return <label className={cn("text-sm font-medium leading-none", className)} {...props} />;
+}
+
+function Switch({ id, checked, onCheckedChange }) {
+  return (
+    <label htmlFor={id} className="relative inline-flex items-center cursor-pointer">
+      <input
+        id={id}
+        type="checkbox"
+        className="sr-only peer"
+        checked={checked}
+        onChange={(e) => onCheckedChange(e.target.checked)}
+      />
+      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+    </label>
+  );
+}
+
+function Badge({ className = "", children }) {
+  return <span className={cn("inline-flex items-center rounded-full border px-2 py-1 text-xs font-semibold", className)}>{children}</span>;
+}
+
+function SettingsMenu({ ui, setUI, addDashboardCard }) {
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+  return (
+    <div className="relative">
+      <Button variant="outline" size="icon" aria-label="Settings" onClick={() => setOpen(!open)}>
+        <Settings className="h-5 w-5" />
+      </Button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-56 rounded-md border bg-background p-1 shadow-md space-y-1">
+          <div className="px-2 py-1 text-sm font-semibold">Settings</div>
+          <button
+            className="w-full text-left px-2 py-1 text-sm hover:bg-accent"
+            onClick={() => {
+              setUI({ ...ui, dark: false });
+              close();
+            }}
+          >
+            Light mode
+          </button>
+          <button
+            className="w-full text-left px-2 py-1 text-sm hover:bg-accent"
+            onClick={() => {
+              setUI({ ...ui, dark: true });
+              close();
+            }}
+          >
+            Dark mode
+          </button>
+          <button
+            className="w-full text-left px-2 py-1 text-sm hover:bg-accent"
+            onClick={() => {
+              addDashboardCard();
+              close();
+            }}
+          >
+            Add card…
+          </button>
+          <button
+            className="w-full text-left px-2 py-1 text-sm hover:bg-accent"
+            onClick={() => {
+              localStorage.clear();
+              window.location.reload();
+            }}
+          >
+            Reset demo data
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SidebarMenu({ ui, setUI, addDashboardCard }) {
+  const [open, setOpen] = useState(false);
+  const nav = (t) => (
+    <Button
+      key={t}
+      variant={ui.tab === t ? "default" : "ghost"}
+      className="w-full justify-start"
+      onClick={() => {
+        setUI({ ...ui, tab: t });
+        setOpen(false);
+      }}
+    >
+      {t}
+    </Button>
+  );
+  return (
+    <div>
+      <Button variant="ghost" size="icon" aria-label="Menu" onClick={() => setOpen(true)}>
+        <Menu className="h-5 w-5" />
+      </Button>
+      {open && (
+        <div className="fixed inset-0 z-40">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 top-0 bottom-0 w-64 bg-background p-6 space-y-2">
+            {['Home', 'File Upload', 'Messages'].map(nav)}
+            {nav('Dashboard')}
+            <Button
+              className="w-full justify-start"
+              onClick={() => {
+                addDashboardCard();
+                setOpen(false);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />+ Dashboard Card
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip as ReTooltip } from "recharts";
 
 const STORAGE_KEY = "briefly_cards_v1";
@@ -87,14 +235,9 @@ function BudgetCard({ card, onUpdate, globalEdit }) {
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-3">
           <CardTitle className="text-base md:text-lg">{card.title}</CardTitle>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6"><Info className="h-4 w-4" /></Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs max-w-[260px]">Interactive chart and legend</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button variant="ghost" size="icon" className="h-6 w-6" title="Interactive chart and legend">
+            <Info className="h-4 w-4" />
+          </Button>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="text-base font-semibold px-3 py-1">{usd(total)}</Badge>
@@ -177,20 +320,7 @@ export default function BrieflyDashboard() {
       <div className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Menu"><Menu className="h-5 w-5" /></Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-64">
-                <div className="mt-6 space-y-2">
-                  {['Home','File Upload','Messages'].map((t) => (
-                    <Button key={t} variant={ui.tab === t ? 'default' : 'ghost'} className="w-full justify-start" onClick={() => setUI({ ...ui, tab: t })}>{t}</Button>
-                  ))}
-                  <Button variant={ui.tab === 'Dashboard' ? 'default' : 'ghost'} className="w-full justify-start" onClick={() => setUI({ ...ui, tab: 'Dashboard' })}>Dashboard</Button>
-                  <Button className="w-full justify-start" onClick={addDashboardCard}><Plus className="h-4 w-4 mr-2" />+ Dashboard Card</Button>
-                </div>
-              </SheetContent>
-            </Sheet>
+            <SidebarMenu ui={ui} setUI={setUI} addDashboardCard={addDashboardCard} />
             <h1 className="text-xl font-semibold tracking-tight">Briefly Dashboard</h1>
             <Badge variant="outline" className="ml-2">MVP</Badge>
           </div>
@@ -199,21 +329,7 @@ export default function BrieflyDashboard() {
               <Label htmlFor="edit-switch" className="text-sm">Edit</Label>
               <Switch id="edit-switch" checked={ui.edit} onCheckedChange={(v) => setUI({ ...ui, edit: v })} />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" aria-label="Settings"><Settings className="h-5 w-5" /></Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Settings</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setUI({ ...ui, dark: false })}>Light mode</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setUI({ ...ui, dark: true })}>Dark mode</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={addDashboardCard}>Add card…</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => { localStorage.clear(); window.location.reload(); }}>Reset demo data</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <SettingsMenu ui={ui} setUI={setUI} addDashboardCard={addDashboardCard} />
           </div>
         </div>
       </div>
