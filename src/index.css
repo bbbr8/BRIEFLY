@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --card: theme(colors.white); --ring: theme(colors.slate.200); }
+.card { @apply bg-white border border-slate-200 rounded-2xl shadow-sm; }
+.card-h { @apply px-4 py-3 border-b border-slate-100 flex items-center justify-between; }
+.card-t { @apply text-base md:text-lg font-semibold; }
+.badge { @apply inline-flex items-center rounded-full border border-slate-300 px-2 py-0.5 text-xs; }
+.btn { @apply inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50 active:translate-y-px; }
+.btn-primary { @apply bg-slate-900 text-white hover:bg-slate-800; }
+.switch { @apply relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-slate-300 transition-colors; }
+.switch-dot { @apply absolute left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform; }
+.switch-on { @apply bg-slate-900 border-slate-900; }
+.switch-on .switch-dot { @apply translate-x-4; }
+.legend { @apply rounded-xl border border-slate-200 p-3; }
+.legend-row { @apply grid grid-cols-[12px_1fr_auto] items-center gap-3 py-1; }
+.dot { @apply h-3 w-3 rounded-full; }
+.total-pill { @apply badge text-sm font-semibold; }
